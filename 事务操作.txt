@@ -1,0 +1,58 @@
+ public function affirmPayLog($pay_sn, $amount, $trans_sn, $pay_type){
+        $model = new College_CollegeModel();
+        $payData = $model->getPayByPaySn($pay_sn);
+        if( empty($payData) ){
+            return array('code' => 0 , 'msg' => "没有查询到数据" );
+        }
+        if( $payData['amount'] != $amount ){
+            return array('code' => 0 , 'msg' => "价格出错" );
+        }
+        $orderData = $model->getOrderByOrderSn($payData['order_sn']);
+        if(empty($orderData)){
+            return array('code' => 0 , 'msg' => "没有订单数据" );
+        }
+        $wid = $payData['wid'];
+        $object = $this->db(5) ;
+        $now = date("Y-m-d H:i:s" , time() );
+        try{
+            $object->beginTransaction() ; //开始事物
+            $sql = "Update college_pay set notify_time= '{$now}' , pay_status = 1 , pay_trans = :trans_sn , pay_type = :pay_type WHERE pay_sn=:pay_sn and pay_status = 0 and wid = :wid";
+            $eff = $object->Exec($sql, array("pay_sn" => $pay_sn , "trans_sn" => $trans_sn , "pay_type" => $pay_type, "wid" => $wid));
+            if( $eff == false  ){
+                throw new Exception("修改流水数据表  college_pay 失败 , pay_sn 是： {$pay_sn} , trans_sn 是: {$trans_sn}  " );
+            }
+
+            //购买成功之后，将该课程加入到学习中心去
+            $insert = array(
+                "wid" => $orderData['wid'],
+                "goods_id" => $orderData['goods_id'],
+                "sku_id" => $orderData['sku_id'],
+                "source" => 1,//来源，购买的来源为1 ，白名单的来源为2
+            );
+            $ret = $model->saveLearnProcess($insert);
+            if($ret == false){
+                throw new Exception("添加到 学习中心失败， 添加数据为 ：".json_encode($insert , JSON_UNESCAPED_UNICODE) );
+            }
+
+            //更新购买人数
+            $sql = "Update goods set actual_buy_num = actual_buy_num+1  WHERE  id =:id ";
+            $goods_ret = $object->Exec($sql, array("id" => $orderData['goods_id']));
+            if( $goods_ret == false  ){
+                throw new Exception("更新购买人数 失败，更新商品id为：{$orderData['goods_id']}" );
+            }
+
+            //更新库存 - 1
+            $sql = "Update goods_sku set stock = stock-1  WHERE  sku_id =:id ";
+            $goods_ret = $object->Exec($sql, array("id" => $orderData['sku_id']));
+            if( $goods_ret == false  ){
+                throw new Exception("更新库存 失败，更新商品sku_id为：{$orderData['sku_id']}" );
+            }
+
+            $object->commit();//事物提交哦
+            return array('code' => 1 , 'msg' => "支付状态处理成功" );
+        }catch(Exception $e){
+            $object->rollBack();
+            $this->writeLog($e->getMessage());
+            return array('code'=>-4 , 'msg'=>"网络繁忙请稍后~~"  );
+        }
+    }
