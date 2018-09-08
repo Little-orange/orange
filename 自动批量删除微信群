@@ -1,0 +1,68 @@
+import pyautogui as pag
+import time,pyperclip,random
+pag.FAILSAFE = True
+print('程序会在十秒后开始运行，现在快去打开微信并把它全屏。')
+time.sleep(10)
+qun_num=[1,2,3,4]
+#在这里改班的序号
+qunlist = []
+for z in range(len(qun_num)):
+    qunlist.append('测试群'+str(qun_num[z]))
+    #在这里，改群的名字和期数
+for x in qunlist:
+    pyperclip.copy(x)
+    pag.moveTo(160,38)
+    pag.click()
+    time.sleep(1)
+    pag.moveTo(160,38)
+    pag.click()
+    time.sleep(1)
+    pag.hotkey('ctrl','a')
+    pag.hotkey('ctrl','v')
+    time.sleep(1.5)
+    pag.moveTo(187,118)
+    pag.click()
+    time.sleep(1)
+    # pag.moveTo(1420,40)
+    # pag.click()
+
+    for x in range(10):
+        #在这修改班级人数上限。除以6就对啦！
+        time.sleep(1)    
+        pag.moveTo(1893,38)
+        pag.click()
+        time.sleep(0.5)
+        
+        pag.moveTo(1772,153)
+        time.sleep(0.5)
+        pag.click()
+        time.sleep(0.5)
+        pag.moveTo(935,425)
+        pag.click()      
+        pag.moveTo(935,480)
+        pag.click()
+        pag.moveTo(935,535)
+        pag.click()
+        pag.moveTo(935,590)
+        pag.click()
+        pag.moveTo(935,645)
+        pag.click()
+        pag.moveTo(935,700)
+        pag.click()
+        time.sleep(0.5)
+        pag.moveTo(1107,735)
+        pag.click()
+        time.sleep(0.8)
+        pag.moveTo(1009,600)
+        pag.click()
+        time.sleep(1)
+
+    pag.moveTo(1893,38)
+    pag.click()
+    time.sleep(0.8)
+    pag.moveTo(1800,665)
+    pag.click()
+    time.sleep(0.8)
+    pag.moveTo(1009,610)
+    pag.click()
+
